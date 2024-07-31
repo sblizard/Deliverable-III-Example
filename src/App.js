@@ -1,49 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import ReminderCard from './ReminderCard';
 
 function App() {
-    const [name, setName] = useState('');
-    const [message, setMessage] = useState('');
-    const [submittedData, setSubmittedData] = useState(null);
+    const [reminders, setReminders] = useState(() => {
+        const savedReminders = localStorage.getItem('reminders');
+        return savedReminders ? JSON.parse(savedReminders) : [];
+    });
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setSubmittedData({ name, message });
+        const newReminder = { title, description };
+        const updatedReminders = [...reminders, newReminder];
+        setReminders(updatedReminders);
+        localStorage.setItem('reminders', JSON.stringify(updatedReminders));
+        setTitle('');
+        setDescription('');
     };
+
+    const handleDelete = (index) => {
+        const updatedReminders = reminders.filter((_, i) => i !== index);
+        setReminders(updatedReminders);
+        localStorage.setItem('reminders', JSON.stringify(updatedReminders));
+    };
+
+    useEffect(() => {
+        const savedReminders = localStorage.getItem('reminders');
+        if (savedReminders) {
+            setReminders(JSON.parse(savedReminders));
+        }
+    }, []);
 
     return (
         <div className="App">
             <div className="App-content">
-                <h1>Deliverable III Example</h1>
+                <h1>Reminder App</h1>
                 <form onSubmit={handleSubmit} className="App-form">
                     <div className="form-group">
-                        <label htmlFor="name">Name:</label>
+                        <label htmlFor="title">Title:</label>
                         <input
                             type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            id="title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
                             className="App-input"
                         />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="message">Message:</label>
+                        <label htmlFor="description">Description:</label>
                         <input
                             type="text"
-                            id="message"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            id="description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
                             className="App-input"
                         />
                     </div>
-                    <button type="submit" className="App-button">Submit</button>
+                    <button type="submit" className="App-button">Add Reminder</button>
                 </form>
 
-                {submittedData && (
-                    <div className="submitted-data">
-                        <h2>Submitted Data</h2>
-                        <p><strong>Name:</strong> {submittedData.name}</p>
-                        <p><strong>Message:</strong> {submittedData.message}</p>
+                {reminders.length > 0 && (
+                    <div className="reminder-list">
+                        <h2>Reminders</h2>
+                        {reminders.map((reminder, index) => (
+                            <ReminderCard
+                                key={index}
+                                title={reminder.title}
+                                description={reminder.description}
+                                onDelete={() => handleDelete(index)}
+                            />
+                        ))}
                     </div>
                 )}
             </div>
